@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
+const chordSymbols = localFont({
+  src: "./fonts/chord_symbols.woff",
+  variable: "--font-chord-symbols",
+  weight: "100 900",
+});
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -26,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${chordSymbols.variable} antialiased`}
       >
         {children}
       </body>
