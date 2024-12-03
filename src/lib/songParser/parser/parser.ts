@@ -182,7 +182,6 @@ const parseExpression = (p: t, precedence: number): Expression.t | null => {
     }
     // nextToken(p);
     leftExp = infix(p, leftExp);
-    debugger;
   }
   return leftExp;
 };
