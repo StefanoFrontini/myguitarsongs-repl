@@ -90,7 +90,6 @@ export const nextToken = (l: t): Token.t => {
       break;
     case Token.LBRACKET:
       const chordObj = readChord(l);
-      console.log("chordObj", chordObj);
       switch (chordObj.tag) {
         case "valid":
           tok = newToken(Token.CHORD, chordObj.literal);

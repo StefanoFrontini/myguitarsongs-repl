@@ -7,7 +7,6 @@ export const parseSong = (input: string) => {
   const l = Lexer.init(input);
   const p = Parser.init(l);
   const program = Parser.parseProgram(p);
-  console.log("program", program);
   //   const actual = await Program.string(program);
   //   console.log("actual", actual);
   return Evaluator.evalNode(program);
