@@ -10,6 +10,7 @@
     "test": "node --experimental-strip-types --experimental-test-coverage --test **/*.test.ts"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.1.0",
     "@react-pdf/renderer": "^4.1.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
