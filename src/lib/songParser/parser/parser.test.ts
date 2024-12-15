@@ -2,9 +2,8 @@ import * as ChordExpression from "@/lib/songParser/ast/chordExpression";
 import * as Expression from "@/lib/songParser/ast/expression";
 import * as ExpressionStatement from "@/lib/songParser/ast/expressionStatement";
 import * as LyricExpression from "@/lib/songParser/ast/lyricExpression";
-import * as WordExpression from "@/lib/songParser/ast/wordExpression";
-// import * as InfixWordExpression from "@/lib/songParser/ast/infixWordExpression";
 import * as Program from "@/lib/songParser/ast/program";
+import * as WordExpression from "@/lib/songParser/ast/wordExpression";
 import * as Lexer from "@/lib/songParser/lexer/lexer";
 import * as Parser from "@/lib/songParser/parser/parser";
 import { assert, describe, it } from "vitest";
@@ -115,7 +114,6 @@ describe("Parser", () => {
 
     const exprStmt = program
       .statements[0] satisfies ExpressionStatement.ExpressionStatement;
-    // console.log("exprStmt", exprStmt);
     testPrefixChordExpression(exprStmt.expression, "A", "abc");
   });
   it("TestOperatorPrecedingParsing", () => {

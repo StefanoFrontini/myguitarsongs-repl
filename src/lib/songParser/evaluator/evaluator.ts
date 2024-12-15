@@ -98,16 +98,6 @@ export const evalNode = (node: Ast.Ast): Song.Song | null => {
       const left = evalNode(node["left"]);
       const right = evalNode(node["right"]);
       return evalInfixExpression(left, right);
-    // case "infixWordExpression":
-    //   if (!node.left || !node.right) return null;
-    //   const left = evalNode(node["left"]);
-    //   const right = evalNode(node["right"]);
-    //   return evalWordInfixExpression(left, right);
-    // case "infixLineExpression":
-    //   if (!node.left || !node.right) return null;
-    //   const leftLine = evalNode(node["left"]);
-    //   const rightLine = evalNode(node["right"]);
-    // return evalWordInfixExpression(leftLine, rightLine);
     default:
       return null;
   }

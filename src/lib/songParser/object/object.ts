@@ -18,5 +18,3 @@ type Line = {
 };
 
 export type Song = Array<Line>;
-
-// export type Song = Array<Word>;

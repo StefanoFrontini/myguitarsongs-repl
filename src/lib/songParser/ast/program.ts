@@ -16,13 +16,5 @@ export const string = (p: Program): string => {
   for (const s of p.statements) {
     result += Statement.string(s);
   }
-  // const readableStream = Readable.from([""]);
-  // for (const s of p.statements) {
-  //   readableStream.push(await Statement.string(s));
-  // }
-  // let result = "";
-  // for await (const chunk of readableStream) {
-  //   result += chunk;
-  // }
   return result;
 };
