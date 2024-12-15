@@ -1,13 +1,13 @@
-export type TokenType = "\x00" | "STRING" | "CHORD" | "\n" | "ILLEGAL";
+export type TokenType = "\x00" | "LYRIC" | "CHORD" | "\n" | "ILLEGAL";
 
-export type t = {
+export type Token = {
   type: TokenType;
   literal: string;
 };
 
 export const ILLEGAL = "ILLEGAL",
   EOF = "\x00",
-  STRING = "STRING",
+  LYRIC = "LYRIC",
   CHORD = "CHORD",
   LBRACKET = "[",
   RBRACKET = "]",

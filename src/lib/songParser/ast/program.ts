@@ -1,10 +1,9 @@
 import * as Statement from "@/lib/songParser/ast/statement";
-import { Readable } from "stream";
-export type t = {
+export type Program = {
   tag: "program";
-  statements: Statement.t[];
+  statements: Statement.Statement[];
 };
-export const tokenLiteral = (p: t): string => {
+export const tokenLiteral = (p: Program): string => {
   if (p.statements.length > 0) {
     return Statement.tokenLiteral(p.statements[0]);
   } else {
@@ -12,14 +11,18 @@ export const tokenLiteral = (p: t): string => {
   }
 };
 
-export const string = async (p: t): Promise<string> => {
-  const readableStream = Readable.from([""]);
-  for (const s of p.statements) {
-    readableStream.push(await Statement.string(s));
-  }
+export const string = (p: Program): string => {
   let result = "";
-  for await (const chunk of readableStream) {
-    result += chunk;
+  for (const s of p.statements) {
+    result += Statement.string(s);
   }
+  // const readableStream = Readable.from([""]);
+  // for (const s of p.statements) {
+  //   readableStream.push(await Statement.string(s));
+  // }
+  // let result = "";
+  // for await (const chunk of readableStream) {
+  //   result += chunk;
+  // }
   return result;
 };

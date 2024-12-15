@@ -1,44 +1,38 @@
-import * as ChordLiteral from "@/lib/songParser/ast/chordLiteral";
-import * as EndoflineLiteral from "@/lib/songParser/ast/endoflineLiteral";
-import * as ErrorLiteral from "@/lib/songParser/ast/errorLiteral";
+import * as ChordExpression from "@/lib/songParser/ast/chordExpression";
+// import * as EndoflineExpression from "@/lib/songParser/ast/endoflineExpression";
+// import * as InfixLineExpression from "@/lib/songParser/ast/infixLineExpression";
+// import * as InfixWordExpression from "@/lib/songParser/ast/infixWordExpression";
 import * as InfixExpression from "@/lib/songParser/ast/infixExpression";
-import * as StringLiteral from "@/lib/songParser/ast/stringLiteral";
-import { Readable } from "stream";
+import * as LyricExpression from "@/lib/songParser/ast/lyricExpression";
+import * as WordExpression from "@/lib/songParser/ast/wordExpression";
 
-export type t =
-  | ChordLiteral.t
-  | InfixExpression.t
-  | StringLiteral.t
-  | EndoflineLiteral.t
-  | ErrorLiteral.t;
+export type Expression =
+  | InfixExpression.InfixExpression
+  // | InfixWordExpression.InfixWordExpression
+  // | InfixLineExpression.InfixLineExpression
+  | WordExpression.WordExpression
+  | ChordExpression.ChordExpression
+  | LyricExpression.LyricExpression;
+// | EndoflineExpression.EndoflineExpression;
 
-export const string = async (e: t): Promise<string> => {
-  let stringExpr = "";
+export const string = (e: Expression): string => {
   switch (e["tag"]) {
+    // case "infixWordExpression":
+    //   return InfixWordExpression.string(e);
     case "infixExpression":
-      stringExpr = await InfixExpression.string(e);
-      break;
-    case "stringLiteral":
-      stringExpr = StringLiteral.string(e);
-      break;
-    case "chordLiteral":
-      stringExpr = ChordLiteral.string(e);
-      break;
-    case "endoflineLiteral":
-      stringExpr = EndoflineLiteral.string(e);
-      break;
-    case "errorLiteral":
-      stringExpr = ErrorLiteral.string(e);
-      break;
+      return InfixExpression.string(e);
+    case "wordExpression":
+      return WordExpression.string(e);
+    case "chordExpression":
+      return ChordExpression.string(e);
+    case "lyricExpression":
+      return LyricExpression.string(e);
+    // case "infixLineExpression":
+    //   return InfixLineExpression.string(e);
+    // case "endoflineExpression":
+    //   return EndoflineExpression.string(e);
     default:
       const _exhaustiveCheck: never = e;
-      throw new Error(_exhaustiveCheck);
+      throw new Error(JSON.stringify(_exhaustiveCheck));
   }
-  const readableStream = Readable.from([""]);
-  readableStream.push(stringExpr);
-  let result = "";
-  for await (const chunk of readableStream) {
-    result += chunk;
-  }
-  return result;
 };

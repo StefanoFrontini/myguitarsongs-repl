@@ -1,77 +1,15 @@
-import * as ChordLiteral from "@/lib/songParser/ast/chordLiteral";
-import * as EndoflineLiteral from "@/lib/songParser/ast/endoflineLiteral";
+import * as ChordExpression from "@/lib/songParser/ast/chordExpression";
 import * as Expression from "@/lib/songParser/ast/expression";
 import * as ExpressionStatement from "@/lib/songParser/ast/expressionStatement";
-import * as InfixExpression from "@/lib/songParser/ast/infixExpression";
+import * as LyricExpression from "@/lib/songParser/ast/lyricExpression";
+import * as WordExpression from "@/lib/songParser/ast/wordExpression";
+// import * as InfixWordExpression from "@/lib/songParser/ast/infixWordExpression";
 import * as Program from "@/lib/songParser/ast/program";
-import * as StringLiteral from "@/lib/songParser/ast/stringLiteral";
 import * as Lexer from "@/lib/songParser/lexer/lexer";
 import * as Parser from "@/lib/songParser/parser/parser";
-import assert from "node:assert";
-import { describe, it } from "node:test";
-const testStringLiteral = (exp: Expression.t | null, value: string) => {
-  assert.ok(exp, "exp is null");
-  assert.strictEqual(
-    exp["tag"],
-    "stringLiteral",
-    `exp is not an stringLiteral. got=${exp["tag"]}`
-  );
-  const sl = exp as StringLiteral.t;
-  assert.strictEqual(
-    sl.value,
-    value,
-    `sl.value is not '${value}'. got=${sl.value}`
-  );
-  assert.strictEqual(
-    StringLiteral.tokenLiteral(sl),
-    value,
-    `sl.tokenLiteral() is not '${value}'. got=${StringLiteral.tokenLiteral(sl)}`
-  );
-};
+import { assert, describe, it } from "vitest";
 
-const testChordLiteral = (exp: Expression.t | null, value: string) => {
-  assert.ok(exp, "exp is null");
-  assert.strictEqual(
-    exp["tag"],
-    "chordLiteral",
-    `exp is not an chordLiteral. got=${exp["tag"]}`
-  );
-  const cl = exp as ChordLiteral.t;
-  assert.strictEqual(
-    cl.value,
-    value,
-    `cl.value is not '${value}'. got=${cl.value}`
-  );
-  assert.strictEqual(
-    ChordLiteral.tokenLiteral(cl),
-    value,
-    `cl.tokenLiteral() is not '${value}'. got=${ChordLiteral.tokenLiteral(cl)}`
-  );
-};
-
-const testEndoflineLiteral = (exp: Expression.t | null, value: string) => {
-  assert.ok(exp, "exp is null");
-  assert.strictEqual(
-    exp["tag"],
-    "endoflineLiteral",
-    `exp is not an endoflineLiteral. got=${exp["tag"]}`
-  );
-  const el = exp as EndoflineLiteral.t;
-  assert.strictEqual(
-    el.value,
-    value,
-    `el.value is not '${value}'. got=${el.value}`
-  );
-  assert.strictEqual(
-    EndoflineLiteral.tokenLiteral(el),
-    value,
-    `el.tokenLiteral() is not '${value}'. got=${EndoflineLiteral.tokenLiteral(
-      el
-    )}`
-  );
-};
-
-const checkParserErrors = (p: Parser.t) => {
+const checkParserErrors = (p: Parser.Parser) => {
   assert.strictEqual(
     p.errors.length,
     0,
@@ -81,9 +19,60 @@ const checkParserErrors = (p: Parser.t) => {
   );
 };
 
+const testChordExpression = (
+  exp: Expression.Expression | null,
+  value: string
+) => {
+  assert.ok(exp, "exp is null");
+  if (exp === null) throw new Error("exp is null");
+  assert.strictEqual(
+    exp["tag"],
+    "chordExpression",
+    `exp is not an chordExpression. got=${exp["tag"]}`
+  );
+  const cl = exp as ChordExpression.ChordExpression;
+  assert.strictEqual(
+    cl.value,
+    value,
+    `cl.value is not '${value}'. got=${cl.value}`
+  );
+  assert.strictEqual(
+    ChordExpression.tokenLiteral(cl),
+    value,
+    `cl.tokenLiteral() is not '${value}'. got=${ChordExpression.tokenLiteral(
+      cl
+    )}`
+  );
+};
+const testPrefixChordExpression = (
+  exp: Expression.Expression | null,
+  chordLiteral: string,
+  lyricLiteral: string
+) => {
+  assert.ok(exp, "exp is null");
+  if (exp === null) throw new Error("exp is null");
+  assert.strictEqual(
+    exp["tag"],
+    "wordExpression",
+    `exp is not an wordExpression. got=${exp["tag"]}`
+  );
+  const prefix = exp as WordExpression.WordExpression;
+  assert.strictEqual(
+    WordExpression.tokenLiteral(prefix),
+    chordLiteral,
+    `cl.tokenLiteral() is not 'a'. got=${WordExpression.tokenLiteral(prefix)}`
+  );
+  const le = prefix.right as LyricExpression.LyricExpression;
+  assert.strictEqual(
+    LyricExpression.tokenLiteral(le),
+    lyricLiteral,
+    `cl.tokenLiteral() is not 'a'. got=${LyricExpression.tokenLiteral(le)}`
+  );
+};
+
 describe("Parser", () => {
-  it("TestStringLiteral", () => {
-    const input = "foobar";
+  it("TestChordExpression", () => {
+    const input = "[A]";
     const l = Lexer.init(input);
     const p = Parser.init(l);
     const program = Parser.parseProgram(p);
@@ -101,11 +90,12 @@ describe("Parser", () => {
       `program.statements[0] is not an ExpressionStatement. got=${program.statements[0]["tag"]}`
     );
 
-    const exprStmt = program.statements[0] as ExpressionStatement.t;
-    testStringLiteral(exprStmt.expression, "foobar");
+    const exprStmt = program
+      .statements[0] satisfies ExpressionStatement.ExpressionStatement;
+    testChordExpression(exprStmt.expression, "A");
   });
-  it("TestChordLiteral", () => {
-    const input = "[C]";
+  it("TestChordExpression2", () => {
+    const input = "[A]abc";
     const l = Lexer.init(input);
     const p = Parser.init(l);
     const program = Parser.parseProgram(p);
@@ -123,73 +113,20 @@ describe("Parser", () => {
       `program.statements[0] is not an ExpressionStatement. got=${program.statements[0]["tag"]}`
     );
 
-    const exprStmt = program.statements[0] as ExpressionStatement.t;
-    testChordLiteral(exprStmt.expression, "C");
+    const exprStmt = program
+      .statements[0] satisfies ExpressionStatement.ExpressionStatement;
+    // console.log("exprStmt", exprStmt);
+    testPrefixChordExpression(exprStmt.expression, "A", "abc");
   });
-  it("TestParsingInfixExpressions", () => {
+  it("TestOperatorPrecedingParsing", () => {
     const tests = [
       {
-        input: "abc[C]",
-        leftValue: "abc",
-        rightValue: "C",
+        input: "[C]abc[D]efg",
+        expected: "((Cabc)(Defg))",
       },
       {
-        input: "cde\n",
-        leftValue: "cde",
-        rightValue: "\n",
-      },
-    ];
-    for (const [index, tt] of tests.entries()) {
-      const l = Lexer.init(tt.input);
-      const p = Parser.init(l);
-      const program = Parser.parseProgram(p);
-      checkParserErrors(p);
-      assert.notStrictEqual(
-        program,
-        null,
-        "Parser.parseProgram() returned null"
-      );
-      console.dir(program.statements, { depth: null });
-      assert.strictEqual(
-        program.statements.length,
-        1,
-        `
-          program.statements has not enough statements. got=${program.statements.length}`
-      );
-      assert.strictEqual(
-        program.statements[0]["tag"],
-        "expressionStatement",
-        `program.statements[0] is not an ExpressionStatement. got=${program.statements[0]["tag"]}`
-      );
-
-      const exprStmt = program.statements[0] as ExpressionStatement.t;
-      assert.ok(exprStmt.expression, "exprStmt.expression is null");
-      assert.strictEqual(
-        exprStmt.expression["tag"],
-        "infixExpression",
-        `exprStmt.expression is not an InfixExpression. got=${exprStmt.expression["tag"]}`
-      );
-      const ie = exprStmt.expression as InfixExpression.t;
-      assert.strictEqual(
-        ie["tag"],
-        "infixExpression",
-        `ie is not an InfixExpression. got=${ie["tag"]}`
-      );
-      if (index === 0) {
-        testStringLiteral(ie.left, tt.leftValue);
-        testChordLiteral(ie.right, tt.rightValue);
-      }
-      if (index === 1) {
-        testStringLiteral(ie.left, tt.leftValue);
-        testEndoflineLiteral(ie.right, tt.rightValue);
-      }
-    }
-  });
-  it("TestOperatorPrecedenceParsing", async () => {
-    const tests = [
-      {
-        input: "abc[C]cde[D]",
-        expected: "(((abcC)cde)D)",
+        input: "[A]abc\n[D]efg",
+        expected: "((Aabc)(Defg))",
       },
     ];
     for (const tt of tests) {
@@ -197,28 +134,9 @@ describe("Parser", () => {
       const p = Parser.init(l);
       const program = Parser.parseProgram(p);
       checkParserErrors(p);
-      assert.notStrictEqual(
-        program,
-        null,
-        "Parser.parseProgram() returned null"
-      );
-      assert.strictEqual(
-        program.statements.length,
-        1,
-        `
-          program.statements has not enough statements. got=${program.statements.length}`
-      );
-      assert.strictEqual(
-        program.statements[0]["tag"],
-        "expressionStatement",
-        `program.statements[0] is not an ExpressionStatement. got=${program.statements[0]["tag"]}`
-      );
-      const actual = await Program.string(program);
-      assert.strictEqual(
-        actual,
-        tt.expected,
-        `actual is not '${tt.expected}'. got=${actual}`
-      );
+      // console.log(JSON.stringify(program, null, 2));
+      // console.log("program: ", Program.string(program));
+      assert.strictEqual(Program.string(program), tt.expected);
     }
   });
 });

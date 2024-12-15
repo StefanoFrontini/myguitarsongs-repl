@@ -1,172 +1,180 @@
-import * as ChordLiteral from "@/lib/songParser/ast/chordLiteral";
-import * as EndoflineLiteral from "@/lib/songParser/ast/endoflineLiteral";
-import * as ErrorLiteral from "@/lib/songParser/ast/errorLiteral";
+import * as ChordExpression from "@/lib/songParser/ast/chordExpression";
+// import * as EndoflineExpression from "@/lib/songParser/ast/endoflineExpression";
 import * as Expression from "@/lib/songParser/ast/expression";
 import * as ExpressionStatement from "@/lib/songParser/ast/expressionStatement";
+import * as LyricExpression from "@/lib/songParser/ast/lyricExpression";
 import * as Program from "@/lib/songParser/ast/program";
 import * as Statement from "@/lib/songParser/ast/statement";
-import * as StringLiteral from "@/lib/songParser/ast/stringLiteral";
+import * as WordExpression from "@/lib/songParser/ast/wordExpression";
 import * as Lexer from "@/lib/songParser/lexer/lexer";
 import * as Token from "@/lib/songParser/token/token";
 
 const LOWEST = 1,
-  EQUALS = 2;
+  SUM = 2;
 
 const precedences = new Map<Token.TokenType, number>([
-  [Token.CHORD, EQUALS],
-  [Token.STRING, EQUALS],
-  [Token.ENDOFLINE, EQUALS],
-  [Token.ILLEGAL, EQUALS],
+  [Token.CHORD, SUM],
+  [Token.ENDOFLINE, SUM],
+  [Token.ILLEGAL, SUM],
 ]);
 
-export type t = {
-  l: Lexer.t;
-  curToken: Token.t;
-  peekToken: Token.t;
+export type Parser = {
+  l: Lexer.Lexer;
+  curToken: Token.Token;
+  peekToken: Token.Token;
   errors: string[];
-  prefixParseFns: Map<Token.TokenType, (p: t) => Expression.t | null>;
+  prefixParseFns: Map<
+    Token.TokenType,
+    (p: Parser) => Expression.Expression | null
+  >;
   infixParseFns: Map<
     Token.TokenType,
-    (p: t, left: Expression.t) => Expression.t
+    (p: Parser, left: Expression.Expression) => Expression.Expression
   >;
 };
 
-// const peekError = (p: t, tokenType: Token.TokenType): void => {
+// const peekError = (p: Parser, tokenType: Token.TokenType): void => {
 //   const msg = `expected next token to be ${tokenType}, got ${p.peekToken.type} instead`;
 //   p.errors.push(msg);
 // };
-
-// const expectPeek = (p: t, tokenType: Token.TokenType): boolean => {
-//   if (peekTokenIs(p, tokenType)) {
-//     nextToken(p);
-//     return true;
-//   } else {
-//     peekError(p, tokenType);
-//     return false;
-//   }
+// const curTokenIs = (p: Parser, tokenType: Token.TokenType): boolean => {
+//   return p.curToken.type === tokenType;
 // };
 
-const peekPrecedence = (p: t): number => {
+const peekTokenIs = (p: Parser, tokenType: Token.TokenType): boolean => {
+  return p.peekToken.type === tokenType;
+};
+
+const expectedPeek = (p: Parser, tokenType: Token.TokenType): boolean => {
+  if (peekTokenIs(p, tokenType)) {
+    // nextToken(p);
+    return true;
+  } else {
+    // peekError(p, tokenType);
+    return false;
+  }
+};
+
+const peekPrecedence = (p: Parser): number => {
   if (!p.peekToken) return LOWEST;
   return precedences.get(p.peekToken.type) ?? LOWEST;
 };
 
-const curPrecedence = (p: t): number => {
+const curPrecedence = (p: Parser): number => {
   if (!p.curToken) return LOWEST;
   return precedences.get(p.curToken.type) ?? LOWEST;
 };
 
 const registerInfix = (
-  p: t,
+  p: Parser,
   tokenType: Token.TokenType,
-  fn: (p: t, left: Expression.t) => Expression.t
+  fn: (p: Parser, left: Expression.Expression) => Expression.Expression
 ): void => {
   p.infixParseFns.set(tokenType, fn);
 };
 const registerPrefix = (
-  p: t,
+  p: Parser,
   tokenType: Token.TokenType,
-  fn: (p: t) => Expression.t
+  fn: (p: Parser) => Expression.Expression
 ): void => {
   p.prefixParseFns.set(tokenType, fn);
 };
 
-const parseStringLiteral = (p: t): Expression.t => {
+const parseLyricExpression = (p: Parser): Expression.Expression => {
   return {
-    tag: "stringLiteral",
+    tag: "lyricExpression",
     token: p.curToken,
     value: p.curToken.literal,
-  } satisfies StringLiteral.t;
+  } satisfies LyricExpression.LyricExpression;
 };
-
-const parseChordLiteral = (p: t): Expression.t => {
-  return {
-    tag: "chordLiteral",
-    token: p.curToken,
-    value: p.curToken.literal,
-  } satisfies ChordLiteral.t;
-};
-
-const parseEndOfLineLiteral = (p: t): Expression.t => {
-  return {
-    tag: "endoflineLiteral",
-    token: p.curToken,
-    value: p.curToken.literal,
-  } satisfies EndoflineLiteral.t;
-};
-
-const parseErrorLiteral = (p: t): Expression.t => {
-  return {
-    tag: "errorLiteral",
-    token: p.curToken,
-    value: p.curToken.literal,
-  } satisfies ErrorLiteral.t;
+const parseChordExpression = (p: Parser): Expression.Expression => {
+  const token = p.curToken;
+  const value = p.curToken.literal;
+  if (!expectedPeek(p, Token.LYRIC)) {
+    nextToken(p);
+    return {
+      tag: "chordExpression",
+      token,
+      value,
+    } satisfies ChordExpression.ChordExpression;
+  } else return parseWordExpression(p);
 };
 
 const parseInfixExpression = (
-  p: t,
-  left: Expression.t | null
-): Expression.t => {
+  p: Parser,
+  left: Expression.Expression
+): Expression.Expression => {
   const precedence = curPrecedence(p);
+  let token;
+  let operator;
+  if (p.curToken.type === Token.ENDOFLINE) {
+    token = p.curToken;
+    operator = p.curToken.literal;
+  } else {
+    token = p.peekToken;
+    operator = p.peekToken.type;
+  }
   nextToken(p);
   const right = parseExpression(p, precedence);
   return {
     tag: "infixExpression",
-    token: p.curToken,
+    token,
     left,
+    operator,
     right,
-  } satisfies Expression.t;
+  } satisfies Expression.Expression;
 };
 
-export const init = (l: Lexer.t): t => {
-  const p: t = {
+export const init = (l: Lexer.Lexer): Parser => {
+  const p: Parser = {
     l: l,
     curToken: Lexer.nextToken(l),
     peekToken: Lexer.nextToken(l),
-    prefixParseFns: new Map<Token.TokenType, (p: t) => Expression.t>(),
+    prefixParseFns: new Map<
+      Token.TokenType,
+      (p: Parser) => Expression.Expression
+    >(),
     infixParseFns: new Map<
       Token.TokenType,
-      (p: t, left: Expression.t) => Expression.t
+      (p: Parser, left: Expression.Expression) => Expression.Expression
     >(),
     errors: [],
   };
-  registerPrefix(p, Token.STRING, parseStringLiteral);
-  registerPrefix(p, Token.CHORD, parseChordLiteral);
-  registerPrefix(p, Token.ENDOFLINE, parseEndOfLineLiteral);
-  registerPrefix(p, Token.ILLEGAL, parseErrorLiteral);
-  registerInfix(p, Token.STRING, parseInfixExpression);
+  registerPrefix(p, Token.CHORD, parseChordExpression);
+  registerPrefix(p, Token.LYRIC, parseLyricExpression);
   registerInfix(p, Token.CHORD, parseInfixExpression);
   registerInfix(p, Token.ENDOFLINE, parseInfixExpression);
-  registerInfix(p, Token.ILLEGAL, parseInfixExpression);
   return p;
 };
 
-export const nextToken = (p: t): void => {
-  // console.log("p.curToken", p.curToken);
+export const nextToken = (p: Parser): void => {
   p.curToken = p.peekToken;
   p.peekToken = Lexer.nextToken(p.l);
 };
-// const parsePrefixExpression = (p: t): Expression.t => {
-//   const expression = {
-//     tag: "prefixExpression",
-//     token: p.curToken,
-//     operator: p.curToken.literal,
-//   };
 
-//   nextToken(p);
-//   expression["right"] = parseExpression(p, PREFIX);
-//   return expression as PrefixExpression.t;
-// };
-const noPrefixParseFnError = (p: t, tokenType: Token.TokenType): void => {
+const noPrefixParseFnError = (p: Parser, tokenType: Token.TokenType): void => {
   const msg = `no prefix parse function for ${tokenType} found`;
   p.errors.push(msg);
 };
 
-const peekTokenIs = (p: t, tokenType: Token.TokenType): boolean => {
-  return p.peekToken.type === tokenType;
+const parseWordExpression = (p: Parser): Expression.Expression => {
+  const token = p.curToken;
+  nextToken(p);
+  return {
+    tag: "wordExpression",
+    token,
+    right: {
+      tag: "lyricExpression",
+      token: p.curToken,
+      value: p.curToken.literal,
+    },
+  } satisfies WordExpression.WordExpression;
 };
 
-const parseExpression = (p: t, precedence: number): Expression.t | null => {
+const parseExpression = (
+  p: Parser,
+  precedence: number
+): Expression.Expression | null => {
   const prefix = p.prefixParseFns.get(p.curToken.type);
   if (!prefix) {
     noPrefixParseFnError(p, p.curToken.type);
@@ -180,26 +188,31 @@ const parseExpression = (p: t, precedence: number): Expression.t | null => {
     if (!infix) {
       return leftExp;
     }
+    if (p.peekToken.type === Token.ENDOFLINE) {
+      nextToken(p);
+    }
     // nextToken(p);
     leftExp = infix(p, leftExp);
   }
   return leftExp;
 };
 
-const parseExpressionStatement = (p: t): ExpressionStatement.t => {
+const parseExpressionStatement = (
+  p: Parser
+): ExpressionStatement.ExpressionStatement => {
   return {
     tag: "expressionStatement",
     token: p.curToken,
     expression: parseExpression(p, LOWEST),
-  } satisfies ExpressionStatement.t;
+  } satisfies ExpressionStatement.ExpressionStatement;
 };
 
-const parseStatement = (p: t): Statement.t | null => {
+const parseStatement = (p: Parser): Statement.Statement | null => {
   return parseExpressionStatement(p);
 };
 
-export const parseProgram = (p: t): Program.t => {
-  const program: Program.t = {
+export const parseProgram = (p: Parser): Program.Program => {
+  const program: Program.Program = {
     tag: "program",
     statements: [],
   };

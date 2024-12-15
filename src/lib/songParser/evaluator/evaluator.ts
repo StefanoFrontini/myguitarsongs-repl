@@ -1,8 +1,10 @@
 import * as Ast from "@/lib/songParser/ast/ast";
 import * as ExpressionStatement from "@/lib/songParser/ast/expressionStatement";
-import * as Song from "@/lib/songParser/object/song";
-const evalStatements = (statements: ExpressionStatement.t[]): Song.t | null => {
-  let result: Song.t | null = null;
+import * as Song from "@/lib/songParser/object/object";
+const evalStatements = (
+  statements: ExpressionStatement.ExpressionStatement[]
+): Song.Song | null => {
+  let result: Song.Song | null = null;
   for (const statement of statements) {
     result = evalNode(statement);
   }
@@ -10,63 +12,103 @@ const evalStatements = (statements: ExpressionStatement.t[]): Song.t | null => {
 };
 
 const evalInfixExpression = (
-  left: Song.t | null,
-  right: Song.t | null
-): Song.t | null => {
+  left: Song.Song | null,
+  right: Song.Song | null
+) => {
   if (left === null || right === null) return null;
   return left.concat(right);
 };
-export const evalNode = (node: Ast.t): Song.t | null => {
+
+export const evalNode = (node: Ast.Ast): Song.Song | null => {
   switch (node["tag"]) {
     case "program":
       return evalStatements(node["statements"]);
     case "expressionStatement":
-      if (node["expression"] === null) {
-        return null;
-      }
+      if (!node.expression) return null;
       return evalNode(node["expression"]);
-
-    case "stringLiteral":
+    case "lyricExpression":
       return [
         {
-          tag: "lyric",
-          value: node["value"],
+          tag: "line",
+          value: [
+            {
+              tag: "word",
+              value: [
+                {
+                  tag: "chord",
+                  value: "",
+                },
+                {
+                  tag: "lyric",
+                  value: node["value"],
+                },
+              ],
+            },
+          ],
         },
-      ] satisfies Song.t;
+      ] satisfies Song.Song;
 
-    case "chordLiteral":
+    case "chordExpression":
       return [
         {
-          tag: "chord",
-          value: node["value"],
+          tag: "line",
+          value: [
+            {
+              tag: "word",
+              value: [
+                {
+                  tag: "chord",
+                  value: node["value"],
+                },
+                {
+                  tag: "lyric",
+                  value: "",
+                },
+              ],
+            },
+          ],
         },
-      ] satisfies Song.t;
+      ] satisfies Song.Song;
 
-    case "endoflineLiteral":
+    case "wordExpression":
+      if (!node.right) return null;
       return [
         {
-          tag: "endofline",
-          value: node["value"],
+          tag: "line",
+          value: [
+            {
+              tag: "word",
+              value: [
+                {
+                  tag: "chord",
+                  value: node["token"]["literal"],
+                },
+                {
+                  tag: "lyric",
+                  value: node["right"]["value"],
+                },
+              ],
+            },
+          ],
         },
-      ] satisfies Song.t;
-
-    case "errorLiteral":
-      return [
-        {
-          tag: "error",
-          value: node["value"],
-        },
-      ] satisfies Song.t;
+      ] satisfies Song.Song;
 
     case "infixExpression":
-      if (node.left === null || node.right === null) return null;
-      const left = evalNode(node.left);
-      const right = evalNode(node.right);
+      if (!node.left || !node.right) return null;
+      const left = evalNode(node["left"]);
+      const right = evalNode(node["right"]);
       return evalInfixExpression(left, right);
-
+    // case "infixWordExpression":
+    //   if (!node.left || !node.right) return null;
+    //   const left = evalNode(node["left"]);
+    //   const right = evalNode(node["right"]);
+    //   return evalWordInfixExpression(left, right);
+    // case "infixLineExpression":
+    //   if (!node.left || !node.right) return null;
+    //   const leftLine = evalNode(node["left"]);
+    //   const rightLine = evalNode(node["right"]);
+    // return evalWordInfixExpression(leftLine, rightLine);
     default:
       return null;
-    //     const _exhaustiveCheck: never = node;
-    //     throw new Error(_exhaustiveCheck);
   }
 };

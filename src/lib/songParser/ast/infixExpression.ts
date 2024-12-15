@@ -1,28 +1,23 @@
 import * as Expression from "@/lib/songParser/ast/expression";
 import * as Token from "@/lib/songParser/token/token";
-import { Readable } from "node:stream";
-export type t = {
+export type InfixExpression = {
   tag: "infixExpression";
-  token: Token.t;
-  left: Expression.t | null;
-  right: Expression.t | null;
+  token: Token.Token;
+  left: Expression.Expression | null;
+  operator: string;
+  right: Expression.Expression | null;
 };
 
-export const tokenLiteral = (i: t): string => i.token.literal;
+export const tokenLiteral = (i: InfixExpression): string => i.token.literal;
 
-export const string = async (i: t): Promise<string> => {
-  const readableStream = Readable.from([""]);
-  readableStream.push("(");
+export const string = (i: InfixExpression): string => {
+  let result = "(";
   if (i.left) {
-    readableStream.push(Expression.string(i.left));
+    result += Expression.string(i.left);
   }
   if (i.right) {
-    readableStream.push(Expression.string(i.right));
+    result += Expression.string(i.right);
   }
-  readableStream.push(")");
-  let result = "";
-  for await (const chunk of readableStream) {
-    result += chunk;
-  }
+  result += ")";
   return result;
 };

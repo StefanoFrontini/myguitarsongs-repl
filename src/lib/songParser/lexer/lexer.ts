@@ -12,20 +12,20 @@ type IllegalChord = {
 
 type Chord = ValidChord | IllegalChord;
 
-export type t = {
+export type Lexer = {
   input: string;
   position: number;
   readPosition: number;
   ch: string;
 };
 
-export const init = (input: string): t => {
+export const init = (input: string): Lexer => {
   const l = { input, position: 0, readPosition: 0, ch: "" };
   readChar(l);
   return l;
 };
 
-const readChar = (l: t): void => {
+const readChar = (l: Lexer): void => {
   if (l.readPosition >= l.input.length) {
     l.ch = Token.EOF;
   } else {
@@ -35,13 +35,6 @@ const readChar = (l: t): void => {
   l.readPosition += 1;
 };
 
-// const peekChar = (l: t): string => {
-//   if (l.readPosition >= l.input.length) {
-//     return "\x00";
-//   } else {
-//     return l.input[l.readPosition];
-//   }
-// };
 const isValidStringChar = (ch: string): boolean =>
   ch !== Token.LBRACKET &&
   ch !== Token.RBRACKET &&
@@ -49,9 +42,7 @@ const isValidStringChar = (ch: string): boolean =>
   ch !== Token.EOF &&
   ch.length === 1;
 
-// const isValidChordChar = (ch: string): boolean => ch !== Token.LBRACKET;
-
-const readString = (l: t): string => {
+const readLyric = (l: Lexer): string => {
   const position = l.position;
   while (isValidStringChar(l.ch)) {
     readChar(l);
@@ -59,7 +50,7 @@ const readString = (l: t): string => {
   return l.input.slice(position, l.position);
 };
 
-const readChord = (l: t): Chord => {
+const readChord = (l: Lexer): Chord => {
   const position = l.position + 1;
 
   do {
@@ -77,12 +68,13 @@ const readChord = (l: t): Chord => {
     literal: l.input.slice(position, l.position),
   };
 };
-const newToken = (t: Token.TokenType, l: string): Token.t => ({
+
+const newToken = (t: Token.TokenType, l: string): Token.Token => ({
   type: t,
   literal: l,
 });
 
-export const nextToken = (l: t): Token.t => {
+export const nextToken = (l: Lexer): Token.Token => {
   let tok = newToken(Token.EOF, Token.EOF);
   switch (l.ch) {
     case Token.EOF:
@@ -102,16 +94,13 @@ export const nextToken = (l: t): Token.t => {
           const _exhaustiveCheck: never = chordObj;
           throw new Error(_exhaustiveCheck);
       }
-    // tok = newToken(Token.CHORD, readChord(l));
-    // tok.type = Token.CHORD;
-    // tok.literal = readChord(l);
     case Token.ENDOFLINE:
       tok = newToken(Token.ENDOFLINE, l.ch);
       break;
     default:
       if (isValidStringChar(l.ch)) {
-        const s = readString(l);
-        tok = newToken(Token.STRING, s);
+        const s = readLyric(l);
+        tok = newToken(Token.LYRIC, s);
         return tok;
       } else {
         tok = newToken(Token.ILLEGAL, l.ch);

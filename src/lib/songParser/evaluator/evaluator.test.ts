@@ -1,148 +1,378 @@
 import * as Evaluator from "@/lib/songParser/evaluator/evaluator";
 import * as Lexer from "@/lib/songParser/lexer/lexer";
-import * as Song from "@/lib/songParser/object/song";
+import * as Song from "@/lib/songParser/object/object";
 import * as Parser from "@/lib/songParser/parser/parser";
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { assert, describe, it } from "vitest";
 
 const testEvalNode = (input: string) => {
   const l = Lexer.init(input);
   const p = Parser.init(l);
   const program = Parser.parseProgram(p);
+  console.log(JSON.stringify(program, null, 2));
   return Evaluator.evalNode(program);
 };
 
-const testLyricObject = (obj: Song.t, expected: Song.t) => {
+const testWordObject = (obj: Song.Song, expected: Song.Song) => {
   assert.strictEqual(
     obj[0]["tag"],
     expected[0]["tag"],
-    `obj is not a Lyric Object. got=${obj[0]["tag"]}`
+    `obj[0]["tag"] is not ${expected[0]["tag"]}. got=${obj[0]["tag"]}`
   );
-  assert.strictEqual(
+  assert.deepEqual(
     obj[0]["value"],
     expected[0]["value"],
-    `obj.value is not '${expected[0]["value"]}'. got=${obj[0]["value"]}`
+    `obj[0]["value"] is not ${JSON.stringify(
+      expected[0]["value"]
+    )}. got=${JSON.stringify(obj[0]["value"])}`
   );
 };
 
-const testChordObject = (obj: Song.t, expected: Song.t) => {
+const textInfixWordObject = (obj: Song.Song, expected: Song.Song) => {
   assert.strictEqual(
     obj[0]["tag"],
     expected[0]["tag"],
-    `obj is not a Chord Object. got=${obj[0]["tag"]}`
+    `obj[0]["tag"] is not ${expected[0]["tag"]}. got=${obj[0]["tag"]}`
   );
   assert.strictEqual(
-    obj[0]["value"],
-    expected[0]["value"],
-    `obj.value is not '${expected[0]["value"]}'. got=${obj[0]["value"]}`
+    obj[0]["value"][0]["tag"],
+    expected[0]["value"][0]["tag"],
+    `obj[0]["value"][0]["tag"] is not ${expected[0]["value"][0]["tag"]}. got=${obj[0]["value"][0]["tag"]}`
   );
+  assert.deepEqual(
+    obj[0]["value"][0]["value"],
+    expected[0]["value"][0]["value"],
+    `obj[0]["value"] is not ${JSON.stringify(
+      expected[0]["value"]
+    )}. got=${JSON.stringify(obj[0]["value"])}`
+  );
+  // assert.strictEqual(
+  //   obj[1]["tag"],
+  //   expected[1]["tag"],
+  //   `obj[1]["tag"] is not ${expected[1]["tag"]}. got=${obj[1]["tag"]}`
+  // );
+  // assert.strictEqual(
+  //   obj[1]["value"][0]["tag"],
+  //   expected[1]["value"][0]["tag"],
+  //   `obj[1]["value"][0]["tag"] is not ${expected[1]["value"][0]["tag"]}. got=${obj[1]["value"][0]["tag"]}`
+  // );
+  // assert.deepEqual(
+  //   obj[1]["value"][0]["value"],
+  //   expected[1]["value"][0]["value"],
+  //   `obj[1]["value"] is not ${JSON.stringify(
+  //     expected[1]["value"]
+  //   )}. got=${JSON.stringify(obj[1]["value"])}`
+  // );
 };
 
-const testEndoflineObject = (obj: Song.t, expected: Song.t) => {
-  assert.strictEqual(
-    obj[0]["tag"],
-    expected[0]["tag"],
-    `obj is not a Endofline Object. got=${obj[0]["tag"]}`
-  );
-  assert.strictEqual(
-    obj[0]["value"],
-    expected[0]["value"],
-    `obj.value is not '${expected[0]["value"]}'. got=${obj[0]["value"]}`
-  );
-};
-
-const testInfixExpression = (obj: Song.t, expected: Song.t) => {
-  assert.strictEqual(
-    obj[0]["tag"],
-    expected[0]["tag"],
-    `obj[0] is not a lyric Object. got=${obj[0]["tag"]}`
-  );
-  assert.strictEqual(
-    obj[0]["value"],
-    expected[0]["value"],
-    `obj[0].value is not a ${expected[0]["value"]}. got=${obj[0]["value"]}`
-  );
-  assert.strictEqual(
-    obj[1]["tag"],
-    expected[1]["tag"],
-    `obj[1] is not a chord Object. got=${obj[1]["tag"]}`
-  );
-  assert.strictEqual(
-    obj[1]["value"],
-    expected[1]["value"],
-    `obj[1] is not a ${expected[1]["value"]}. got=${obj[1]["value"]}`
-  );
-};
-
-describe("evaluator", () => {
-  it("TestEvalStringLiteral", () => {
+describe("Evaluator", () => {
+  it("TestEvalLyricExpression", () => {
     const tests = [
       {
-        input: "ab c",
+        input: `abc`,
         expected: [
           {
-            tag: "lyric",
-            value: "ab c",
+            tag: "line",
+            value: [
+              {
+                tag: "word",
+                value: [
+                  {
+                    tag: "chord",
+                    value: "",
+                  },
+                  {
+                    tag: "lyric",
+                    value: "abc",
+                  },
+                ],
+              },
+            ],
           },
-        ] satisfies Song.t,
+        ] satisfies Song.Song,
       },
     ];
+
     for (const tt of tests) {
       const evaluated = testEvalNode(tt.input);
-      assert.ok(evaluated, "evaluated is null");
-      testLyricObject(evaluated, tt.expected);
+      assert.isNotNull(evaluated, "evaluated is null");
+      if (evaluated === null) throw new Error("evaluated is null");
+      testWordObject(evaluated, tt.expected);
     }
   });
-  it("TestEvalChordLiteral", () => {
+  it("TestEvalChordExpression", () => {
     const tests = [
       {
-        input: "[C]",
+        input: `[A]`,
         expected: [
           {
-            tag: "chord",
-            value: "C",
+            tag: "line",
+            value: [
+              {
+                tag: "word",
+                value: [
+                  {
+                    tag: "chord",
+                    value: "A",
+                  },
+                  {
+                    tag: "lyric",
+                    value: "",
+                  },
+                ],
+              },
+            ],
           },
-        ] satisfies Song.t,
+        ] satisfies Song.Song,
       },
     ];
+
     for (const tt of tests) {
       const evaluated = testEvalNode(tt.input);
-      assert.ok(evaluated, "evaluated is null");
-      testChordObject(evaluated, tt.expected);
+      assert.isNotNull(evaluated, "evaluated is null");
+      if (evaluated === null) throw new Error("evaluated is null");
+      testWordObject(evaluated, tt.expected);
     }
   });
-  it("TestEvalEndoflineLiteral", () => {
+  it("TestEvalWordPrefixExpression", () => {
     const tests = [
       {
-        input: "\n",
+        input: `[A]abc`,
         expected: [
           {
-            tag: "endofline",
-            value: "\n",
+            tag: "line",
+            value: [
+              {
+                tag: "word",
+                value: [
+                  {
+                    tag: "chord",
+                    value: "A",
+                  },
+                  {
+                    tag: "lyric",
+                    value: "abc",
+                  },
+                ],
+              },
+            ],
           },
-        ] satisfies Song.t,
+        ] satisfies Song.Song,
       },
     ];
+
     for (const tt of tests) {
       const evaluated = testEvalNode(tt.input);
-      assert.ok(evaluated, "evaluated is null");
-      testEndoflineObject(evaluated, tt.expected);
+      assert.isNotNull(evaluated, "evaluated is null");
+      if (evaluated === null) throw new Error("evaluated is null");
+      testWordObject(evaluated, tt.expected);
     }
   });
-  it("TestEvalInfixExpression", () => {
+  it("TestEvalWordInfixExpression", () => {
     const tests = [
       {
-        input: "abc[C]",
+        input: `[A]abc[C]xyz`,
         expected: [
-          { tag: "lyric", value: "abc" },
-          { tag: "chord", value: "C" },
-        ] satisfies Song.t,
+          {
+            tag: "line",
+            value: [
+              {
+                tag: "word",
+                value: [
+                  {
+                    tag: "chord",
+                    value: "A",
+                  },
+                  {
+                    tag: "lyric",
+                    value: "abc",
+                  },
+                ],
+              },
+              {
+                tag: "word",
+                value: [
+                  {
+                    tag: "chord",
+                    value: "C",
+                  },
+                  {
+                    tag: "lyric",
+                    value: "xyz",
+                  },
+                ],
+              },
+            ],
+          },
+        ] satisfies Song.Song,
+      },
+      {
+        input: `[A]abc[C]`,
+        expected: [
+          {
+            tag: "line",
+            value: [
+              {
+                tag: "word",
+                value: [
+                  {
+                    tag: "chord",
+                    value: "A",
+                  },
+                  {
+                    tag: "lyric",
+                    value: "abc",
+                  },
+                ],
+              },
+              {
+                tag: "word",
+                value: [
+                  {
+                    tag: "chord",
+                    value: "C",
+                  },
+                  {
+                    tag: "lyric",
+                    value: "",
+                  },
+                ],
+              },
+            ],
+          },
+        ] satisfies Song.Song,
+      },
+      {
+        input: `abc[A]`,
+        expected: [
+          {
+            tag: "line",
+            value: [
+              {
+                tag: "word",
+                value: [
+                  {
+                    tag: "chord",
+                    value: "",
+                  },
+                  {
+                    tag: "lyric",
+                    value: "abc",
+                  },
+                ],
+              },
+              {
+                tag: "word",
+                value: [
+                  {
+                    tag: "chord",
+                    value: "A",
+                  },
+                  {
+                    tag: "lyric",
+                    value: "",
+                  },
+                ],
+              },
+            ],
+          },
+        ] satisfies Song.Song,
+      },
+      {
+        input: `abc[A]xyz`,
+        expected: [
+          {
+            tag: "line",
+            value: [
+              {
+                tag: "word",
+                value: [
+                  {
+                    tag: "chord",
+                    value: "",
+                  },
+                  {
+                    tag: "lyric",
+                    value: "abc",
+                  },
+                ],
+              },
+              {
+                tag: "word",
+                value: [
+                  {
+                    tag: "chord",
+                    value: "A",
+                  },
+                  {
+                    tag: "lyric",
+                    value: "xyz",
+                  },
+                ],
+              },
+            ],
+          },
+        ] satisfies Song.Song,
       },
     ];
+
     for (const tt of tests) {
       const evaluated = testEvalNode(tt.input);
-      assert.ok(evaluated, "evaluated is null");
-      testInfixExpression(evaluated, tt.expected);
+      assert.isNotNull(evaluated, "evaluated is null");
+      if (evaluated === null) throw new Error("evaluated is null");
+      textInfixWordObject(evaluated, tt.expected);
+    }
+  });
+  it("TestEvalLineInfixExpression", () => {
+    const tests = [
+      {
+        input: `[A]abc\n[C]xyz`,
+        expected: [
+          {
+            tag: "line",
+            value: [
+              {
+                tag: "word",
+                value: [
+                  {
+                    tag: "chord",
+                    value: "A",
+                  },
+                  {
+                    tag: "lyric",
+                    value: "abc",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            tag: "line",
+            value: [
+              {
+                tag: "word",
+                value: [
+                  {
+                    tag: "chord",
+                    value: "C",
+                  },
+                  {
+                    tag: "lyric",
+                    value: "xyz",
+                  },
+                ],
+              },
+            ],
+          },
+        ] satisfies Song.Song,
+      },
+    ];
+
+    for (const tt of tests) {
+      const evaluated = testEvalNode(tt.input);
+      // console.log("evaluated", JSON.stringify(evaluated, null, 2));
+      assert.isNotNull(evaluated, "evaluated is null");
+      if (evaluated === null) throw new Error("evaluated is null");
+      testWordObject(evaluated, tt.expected);
     }
   });
 });
