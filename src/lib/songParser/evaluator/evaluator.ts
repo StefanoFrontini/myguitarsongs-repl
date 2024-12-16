@@ -71,7 +71,7 @@ export const evalNode = (node: Ast.Ast): Song.Song | null => {
       ] satisfies Song.Song;
 
     case "wordExpression":
-      if (!node.right) return null;
+      if (!node.value) return null;
       return [
         {
           tag: "line",
@@ -81,11 +81,11 @@ export const evalNode = (node: Ast.Ast): Song.Song | null => {
               value: [
                 {
                   tag: "chord",
-                  value: node["token"]["literal"],
+                  value: node["value"][0]["value"],
                 },
                 {
                   tag: "lyric",
-                  value: node["right"]["value"],
+                  value: node["value"][1]["value"],
                 },
               ],
             },

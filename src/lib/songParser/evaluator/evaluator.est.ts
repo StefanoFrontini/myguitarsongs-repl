@@ -365,6 +365,73 @@ describe("Evaluator", () => {
           },
         ] satisfies Song.Song,
       },
+      // {
+      //   input: `[A]abc[B]def\n[C]qwe[D]ghj`,
+      //   expected: [
+      //     {
+      //       tag: "line",
+      //       value: [
+      //         {
+      //           tag: "word",
+      //           value: [
+      //             {
+      //               tag: "chord",
+      //               value: "A",
+      //             },
+      //             {
+      //               tag: "lyric",
+      //               value: "abc",
+      //             },
+      //           ],
+      //         },
+      //         {
+      //           tag: "word",
+      //           value: [
+      //             {
+      //               tag: "chord",
+      //               value: "B",
+      //             },
+      //             {
+      //               tag: "lyric",
+      //               value: "def",
+      //             },
+      //           ],
+      //         },
+      //       ],
+      //     },
+      //     {
+      //       tag: "line",
+      //       value: [
+      //         {
+      //           tag: "word",
+      //           value: [
+      //             {
+      //               tag: "chord",
+      //               value: "C",
+      //             },
+      //             {
+      //               tag: "lyric",
+      //               value: "qwe",
+      //             },
+      //           ],
+      //         },
+      //         {
+      //           tag: "word",
+      //           value: [
+      //             {
+      //               tag: "chord",
+      //               value: "D",
+      //             },
+      //             {
+      //               tag: "lyric",
+      //               value: "ghj",
+      //             },
+      //           ],
+      //         },
+      //       ],
+      //     },
+      //   ] satisfies Song.Song,
+      // },
     ];
 
     for (const tt of tests) {

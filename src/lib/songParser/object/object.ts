@@ -1,12 +1,13 @@
-type Chord = {
+export type Chord = {
   tag: "chord";
   value: string;
 };
 
-type Lyric = {
+export type Lyric = {
   tag: "lyric";
   value: string;
 };
+
 type Word = {
   tag: "word";
   value: [Chord, Lyric];
