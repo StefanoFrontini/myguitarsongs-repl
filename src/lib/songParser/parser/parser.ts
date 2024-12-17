@@ -117,6 +117,7 @@ export const init = (l: Lexer.Lexer): Parser => {
   };
   registerPrefix(p, Token.CHORD, parseWordExpression);
   registerPrefix(p, Token.LYRIC, parseWordExpression);
+  registerPrefix(p, Token.ENDOFLINE, parseWordExpression);
   registerInfix(p, Token.CHORD, parseInfixExpression);
   registerInfix(p, Token.ENDOFLINE, parseInfixExpression);
   return p;
@@ -148,7 +149,22 @@ const noPrefixParseFnError = (p: Parser, tokenType: Token.TokenType): void => {
 //   } satisfies WordExpression.WordExpression;
 // };
 const parseWordExpression = (p: Parser): Expression.Expression => {
-  if (p.curToken.type === Token.LYRIC) {
+  if (p.curToken.type === Token.ENDOFLINE) {
+    return {
+      tag: "wordExpression",
+      token: p.curToken,
+      value: [
+        {
+          tag: "chord",
+          value: "",
+        },
+        {
+          tag: "lyric",
+          value: "",
+        },
+      ],
+    };
+  } else if (p.curToken.type === Token.LYRIC) {
     return {
       tag: "wordExpression",
       token: p.curToken,
@@ -218,15 +234,32 @@ const parseInfixExpression = (
   const precedence = curPrecedence(p);
   let token;
   let operator;
-  if (p.curToken.type === Token.ENDOFLINE) {
+  if (
+    p.curToken.type === Token.ENDOFLINE &&
+    p.peekToken.type !== Token.ENDOFLINE
+  ) {
     token = p.curToken;
-    operator = p.curToken.literal;
+    operator = p.curToken.type;
     nextToken(p);
   } else {
     token = p.curToken;
-    operator = p.curToken.literal;
+    operator = p.curToken.type;
   }
-  const right = parseExpression(p, precedence);
+  // const right = parseExpression(p, precedence);
+  const right = parseExpression(p, precedence) ?? {
+    tag: "wordExpression",
+    token: p.curToken,
+    value: [
+      {
+        tag: "chord",
+        value: "",
+      },
+      {
+        tag: "lyric",
+        value: "",
+      },
+    ],
+  };
   return {
     tag: "infixExpression",
     token,

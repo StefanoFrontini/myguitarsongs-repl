@@ -5,7 +5,7 @@ import * as ExpressionStatement from "@/lib/songParser/ast/expressionStatement";
 import * as Program from "@/lib/songParser/ast/program";
 import * as WordExpression from "@/lib/songParser/ast/wordExpression";
 import * as Lexer from "@/lib/songParser/lexer/lexer";
-import * as Object from "@/lib/songParser/object/object";
+import * as Song from "@/lib/songParser/object/song";
 import * as Parser from "@/lib/songParser/parser/parser";
 import { assert, describe, it } from "vitest";
 
@@ -21,7 +21,7 @@ const checkParserErrors = (p: Parser.Parser) => {
 
 const testWordExpression = (
   exp: Expression.Expression | null,
-  value: [Object.Chord, Object.Lyric]
+  value: [Song.Chord, Song.Lyric]
 ) => {
   assert.ok(exp, "exp is null");
   if (exp === null) throw new Error("exp is null");

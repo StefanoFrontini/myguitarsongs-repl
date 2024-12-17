@@ -1,11 +1,11 @@
 // import * as LyricExpression from "@/lib/songParser/ast/lyricExpression";
-import * as Object from "@/lib/songParser/object/object";
+import * as Song from "@/lib/songParser/object/song";
 import * as Token from "@/lib/songParser/token/token";
 
 export type WordExpression = {
   tag: "wordExpression";
   token: Token.Token;
-  value: [Object.Chord, Object.Lyric];
+  value: [Song.Chord, Song.Lyric];
 };
 
 export const tokenLiteral = (p: WordExpression): string => p.token.literal;

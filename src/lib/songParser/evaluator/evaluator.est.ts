@@ -1,6 +1,6 @@
 import * as Evaluator from "@/lib/songParser/evaluator/evaluator";
 import * as Lexer from "@/lib/songParser/lexer/lexer";
-import * as Song from "@/lib/songParser/object/object";
+import * as Song from "@/lib/songParser/object/song";
 import * as Parser from "@/lib/songParser/parser/parser";
 import { assert, describe, it } from "vitest";
 

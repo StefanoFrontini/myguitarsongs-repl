@@ -23,18 +23,18 @@ const Chord = ({ value }: { value: string }) => (
     </span>
   </span>
 );
-const Endofline = () => (
-  <>
-    <br />
-  </>
-);
+// const Endofline = () => (
+//   <>
+//     <br />
+//   </>
+// );
 
-const ErrorComponent = () => (
-  <span className="text-red-500">{` Parsing error: ']' expected `}</span>
-);
+// const ErrorComponent = () => (
+//   <span className="text-red-500">{` Parsing error: ']' expected `}</span>
+// );
 
 const renderSongElement = (
-  { tag, value }: Song.Lyric | Song.Chord | Song.Endofline | Song.ErrorObj,
+  { tag, value }: Song.Lyric | Song.Chord,
   index: number
 ) => {
   switch (tag) {
@@ -42,10 +42,10 @@ const renderSongElement = (
       return <Lyric value={value} key={index} />;
     case "chord":
       return <Chord value={value} key={index} />;
-    case "endofline":
-      return <Endofline key={index} />;
-    case "error":
-      return <ErrorComponent key={index} />;
+    // case "endofline":
+    //   return <Endofline key={index} />;
+    // case "error":
+    //   return <ErrorComponent key={index} />;
     default:
       const _exhaustiveCheck: never = tag;
       throw new Error(_exhaustiveCheck);
@@ -87,7 +87,7 @@ type RenderingState =
   | ShouldShowPreviousDocument;
 
 export default function Home() {
-  const workerRef = useRef<Worker>();
+  const workerRef = useRef<Worker>(null);
   const timerRef = useRef("");
   const [song, setSong] = useState(`  Oh when the winds they b[AM]low
           You're g[E]onna n[G]eed somebody to kn[F]ow you`);
@@ -98,7 +98,9 @@ export default function Home() {
   //   tag: "null",
   //   value: null,
   // });
-  const [parsedSong, setParsedSong] = useState<Song.t>(parseSong(song) ?? []);
+  const [parsedSong, setParsedSong] = useState<Song.Song>(
+    parseSong(song) ?? []
+  );
   const [numPages, setNumPages] = useState<number>();
 
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -164,13 +166,13 @@ export default function Home() {
     shouldShowPreviousDocument
   );
 
-  const onPreviousPage = () => {
-    setCurrentPage((prev) => prev - 1);
-  };
+  // const onPreviousPage = () => {
+  //   setCurrentPage((prev) => prev - 1);
+  // };
 
-  const onNextPage = () => {
-    setCurrentPage((prev) => prev + 1);
-  };
+  // const onNextPage = () => {
+  //   setCurrentPage((prev) => prev + 1);
+  // };
 
   const onDocumentLoad = ({ numPages }: { numPages: number }): void => {
     setNumPages(numPages);
@@ -297,7 +299,8 @@ export default function Home() {
         />
       </div>
       <div className="output">
-        {parsedSong && parsedSong.map(renderSongElement)}
+        <pre>{JSON.stringify(parsedSong, null, 2)}</pre>
+        {/* {parsedSong && parsedSong.map(renderSongElement)} */}
       </div>
       <Button
         onClick={() => {

@@ -13,7 +13,7 @@ type Word = {
   value: [Chord, Lyric];
 };
 
-type Line = {
+export type Line = {
   tag: "line";
   value: Array<Word>;
 };

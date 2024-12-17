@@ -4,7 +4,7 @@ import { pdf } from "@react-pdf/renderer";
 import { createElement } from "react";
 import { PDF } from "./src/app/pdf/PDF";
 
-self.addEventListener("message", async (event: MessageEvent<Song.t>) => {
+self.addEventListener("message", async (event: MessageEvent<Song.Song>) => {
   console.log("event from worker", event.data);
   //   postMessage(event.data);
   //   let sum = 0;
